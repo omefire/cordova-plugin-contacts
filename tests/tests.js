@@ -503,7 +503,9 @@ exports.defineAutoTests = function() {
                     var endTime = new Date();
                     console.log("Spec22 - EndTime: " + getTimeInHHMMSS(endTime));
                     console.log("Time Elapsed: " + toHHMMSS( (startTime.getTime() / 1000) - (endTime.getTime() / 1000) ));
-                    fail.bind(null, done);
+                    //fail.bind(null, done);
+                    expect(10).toBe(20);
+                    done();
                 };
 
                 function updateSuccess(obj) {
@@ -537,13 +539,21 @@ exports.defineAutoTests = function() {
             }, MEDIUM_TIMEOUT);
         });
 
-        describe('Contact.remove method', function(done) {
-            afterEach(function (done) {
-                removeContact(done);
+        describe('Contact.remove method', function() {
+            afterEach(function () {
+                //removeContact(done);
             });
 
             it("contacts.spec.23 calling remove on a contact that has an id of null should return ContactError.UNKNOWN_ERROR", function(done) {
-                var startTime = new Date();
+                contact.remove(function() {
+                    expect(10).toBe(20);
+                    done();
+                }, function(err) {
+                    expect(err.code).toBe(ContactError.UNKNOWN_ERROR);
+                    done();
+                });
+                
+                /*var startTime = new Date();
                 console.log("Spec23 - Start Time: " + getTimeInHHMMSS(startTime));
                 
                 var unexpectedSuccess = function() {
@@ -572,7 +582,11 @@ exports.defineAutoTests = function() {
                 if (isWindows || isWindowsPhone8 || isIOSPermissionBlocked) {
                     pending();
                 }
-                var rmWin = fail.bind(null, done);
+                var rmWin = function() {
+                    expect(10).toBe(20);
+                    done();
+                };
+                //fail.bind(null, done);
                 var rmFail = function(result) {
                     expect(result.code).toBe(ContactError.UNKNOWN_ERROR);
                     done();
@@ -603,8 +617,8 @@ exports.defineAutoTests = function() {
                 });
             };
 
-            afterEach(function (done) {
-                removeContact(done);
+            afterEach(function () {
+                //removeContact(done);
             });
 
             it("contacts.spec.25 Creating, saving, finding a contact should work", function(done) {
@@ -655,6 +669,32 @@ exports.defineAutoTests = function() {
             }, MEDIUM_TIMEOUT);
 
             it("contacts.spec.27 Should not be able to delete the same contact twice", function(done) {
+
+                var contact = new Contact({
+                    displayName: "John Smith" + Math.random()
+                });
+                
+                contact.save(function(savedContact) {
+                    // Delete the contact for the first time
+                    contact.remove(function() {
+                        // Delete the same contact for a second time
+                        contact.remove(function() {
+                            expect(10).toBe(20);
+                            done(); // ToDO: Will this work & not result in timeout?
+                        }, function(err){
+                           expect(err).toBe(ContactError.UNKNOWN_ERROR); 
+                        });
+                    }, function(err) {
+                        console.log(err);
+                        throw err; // ToDO: does throwing achieve the same effect as done() ?
+                    });
+                }, function(err) {
+                    console.log(err);
+                    throw err; // ToDO: does throwing achieve the same effect as done() ?
+                });
+            }, MEDIUM_TIMEOUT);
+            
+            /*it("contacts.spec.27 Should not be able to delete the same contact twice", function(done) {
                 
                 var startTime = new Date();
                 console.log("Spec27 - Start Time: " + getTimeInHHMMSS(startTime));
@@ -717,7 +757,26 @@ exports.defineAutoTests = function() {
                 contact.note = "DeleteMe";
                 contact.name = new ContactName();
                 contact.name.familyName = contactName;
-                saveAndFindBy(contact, ["displayName", "name"], contactName, done);
+                
+                contact.save(function(savedContact) {
+                    navigator.contacts.find(["note"], function(foundContacts) {
+                        expect(foundContacts.length).toBe(1);
+                        expect(foundContacts[0].name.familyName).toBe(contact.name.familyName);
+                        done();
+                    }, function(err) {
+                        console.log(err);
+                        expect(10).toBe(20);
+                        done();
+                    }, {
+                        multiple: true,
+                        filter: contact.note
+                    });
+                }, function(err) {
+                    console.log(err);
+                    expect(10).toBe(20);
+                    done(); // ToDO: Will this be called ? will it result in timeout ?
+                });
+                //saveAndFindBy(contact, ["displayName", "name"], contactName, done);
             }, MEDIUM_TIMEOUT);
 
             it("contacts.spec.29 should find a contact without a name", function (done) {
@@ -730,9 +789,25 @@ exports.defineAutoTests = function() {
                 var phoneNumbers = [1];
                 phoneNumbers[0] = new ContactField('work', '555-555-1234', true);
                 contact.phoneNumbers = phoneNumbers;
-
-                saveAndFindBy(contact, ["phoneNumbers"], "555-555-1234", done);
-
+                contact.save(function(savedContact) {
+                    navigator.contacts.find(["phoneNumbers"], function(foundContacts) {
+                        expect(foundContacts.length).toBe(1);
+                        expect(foundContacts[0].phoneNumbers[0]).toBe(contact.phoneNumbers[0]);
+                        done(); // ToDO:
+                    }, function(err) {
+                        console.log(err);
+                        expect(10).toBe(20);
+                        done();
+                    }, {
+                        multiple: true,
+                        filter: contact.phoneNumbers
+                    });
+                }, function(err) {
+                    console.log(err);
+                    expect(10).toBe(20);
+                    done(); // ToDO:
+                });
+                //saveAndFindBy(contact, ["phoneNumbers"], "555-555-1234", done);
             }, MEDIUM_TIMEOUT);
         });
 
